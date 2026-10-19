@@ -1,0 +1,23 @@
+{
+  "name": "Lab Achievement Badge",
+  "description": "Awarded to Rehan Ansari (UCID 2024801002) for completing OEIT1 Lab 6A: Create Non-Fungible Tokens, SPIT Mumbai.",
+  "image": "ipfs://bafybeifbjd6a6dfs7zyn36mnt23jt7dcjgpjt6ejkz2vykkk672v2d67sy",
+  "attributes": [
+    {
+      "trait_type": "Course",
+      "value": "Blockchain Technology and Applications"
+    },
+    {
+      "trait_type": "Lab",
+      "value": "6A"
+    },
+    {
+      "trait_type": "Institute",
+      "value": "Sardar Patel Institute of Technology"
+    },
+    {
+      "trait_type": "Year",
+      "value": "2026"
+    }
+  ]
+}

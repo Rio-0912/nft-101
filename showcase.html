@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Badge NFT</title>
+<style>
+  :root { --bg: #0f0b1a; --card: #1a1428; --text: #f1ecff; --muted: #a99fc4; --accent: #f5b83d; --ok: #5fd39a; --err: #ff7a7a; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+  .card { background: var(--card); border-radius: 16px; padding: 24px; max-width: 420px; width: 100%; }
+  img { width: 100%; border-radius: 12px; display: block; }
+  h1 { font-size: 1.4rem; margin: 16px 0 4px; }
+  p { color: var(--muted); margin: 0 0 12px; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: .85rem; margin: 0 0 16px; }
+  dt { color: var(--muted); } dd { margin: 0; word-break: break-all; }
+  button { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: var(--accent); color: #1a1428; font-weight: 700; font-size: 1rem; cursor: pointer; }
+  #status { margin-top: 12px; font-size: .9rem; min-height: 1.5em; }
+  .ok { color: var(--ok); } .err { color: var(--err); }
+</style>
+</head>
+<body>
+<div class="card">
+  <img id="img" alt="Lab badge" src="https://gateway.pinata.cloud/ipfs/bafybeifbjd6a6dfs7zyn36mnt23jt7dcjgpjt6ejkz2vykkk672v2d67sy">
+  <h1 id="name">Loading…</h1>
+  <p id="desc"></p>
+  <dl>
+    <dt>Network</dt><dd>Sepolia</dd>
+    <dt>Contract</dt><dd id="contract"></dd>
+    <dt>Token ID</dt><dd>1</dd>
+    <dt>Owner</dt><dd id="owner">…</dd>
+  </dl>
+  <button id="add">Add badge to MetaMask</button>
+  <div id="status"></div>
+</div>
+<script>
+  const CONTRACT = "0x0De32F99FCdC12f78eb8bFB377921B0E3a7b777b";
+  const TOKEN_ID = "1";
+  const METADATA = "https://gateway.pinata.cloud/ipfs/bafkreic4ithtd5wb6rnjmwm7l6brpdgwzemsidlzhkpre6p2mtpe6yjtje";
+  const RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+  const $ = (id) => document.getElementById(id);
+  const status = (msg, cls = "") => { $("status").textContent = msg; $("status").className = cls; };
+  $("contract").textContent = CONTRACT;
+
+  fetch(METADATA).then((r) => r.json()).then((m) => {
+    $("name").textContent = m.name;
+    $("desc").textContent = m.description;
+    $("img").src = m.image.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
+  });
+
+  // ownerOf(1) read straight from the chain
+  fetch(RPC, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call",
+      params: [{ to: CONTRACT, data: "0x6352211e" + TOKEN_ID.padStart(64, "0") }, "latest"] })
+  }).then((r) => r.json()).then((r) => { $("owner").textContent = "0x" + r.result.slice(-40); });
+
+  $("add").onclick = async () => {
+    if (!window.ethereum) return status("MetaMask not detected in this browser.", "err");
+    try {
+      status("Approve the connection in MetaMask…");
+      const [account] = await ethereum.request({ method: "eth_requestAccounts" });
+      status("Switch to Sepolia in MetaMask…");
+      await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0xaa36a7" }] });
+      status("Approve adding the NFT in MetaMask…");
+      const added = await ethereum.request({
+        method: "wallet_watchAsset",
+        params: { type: "ERC721", options: { address: CONTRACT, tokenId: TOKEN_ID } }
+      });
+      status(added ? `Added to ${account.slice(0, 6)}…${account.slice(-4)}. Open MetaMask → NFTs.` : "Not added.", added ? "ok" : "err");
+    } catch (e) {
+      status(e.message, "err");
+    }
+  };
+</script>
+</body>
+</html>
